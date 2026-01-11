@@ -4,42 +4,37 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
-import es.deusto.sd.proyecto.DAO.caseInvestigationRepository;
 import es.deusto.sd.proyecto.Entity.AnalysisType;
 import es.deusto.sd.proyecto.Entity.CaseInvestigation;
 import es.deusto.sd.proyecto.Entity.User;
 import es.deusto.sd.proyecto.Gateway.AnalysisGateway;
 import es.deusto.sd.proyecto.Gateway.DatabaseGateway;
 import es.deusto.sd.proyecto.DTO.CaseInvestigationDTO;
-import es.deusto.sd.proyecto.DTO.userDTO;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CaseInvestigationService {
 
     private final stateManagement instance;
-    private final caseInvestigationRepository ciRepository;
     private final AnalysisGateway analysisGateway;
     private final DatabaseGateway databaseGateway;
 
     public CaseInvestigationService(
-            caseInvestigationRepository ciRepository,
             AnalysisGateway analysisGateway,
             DatabaseGateway databaseGateway
     ) {
         this.instance = stateManagement.getInstance();
-        this.ciRepository = ciRepository;
         this.analysisGateway = analysisGateway;
         this.databaseGateway = databaseGateway;
     }
 
+    /**
+     * Crea una investigación enviando los datos a la BD mediante HTTP.
+     */
     public APIResponse createCaseInvestigation(UUID token, CaseInvestigationDTO dto) {
-
         User user = instance.getUserByToken(token);
 
         if (user == null) {
@@ -59,14 +54,23 @@ public class CaseInvestigationService {
 
         ci.setUserId(user.getId());
 
-        ciRepository.save(ci);
+        // Acceso a BD mediante HTTP a través del Gateway
+        boolean success = databaseGateway.saveCase(ci);
 
-        return APIResponse.CREADO;
+        return success ? APIResponse.CREADO : APIResponse.MAL;
     }
 
+    /**
+     * Recupera las investigaciones del usuario mediante una petición HTTP GET.
+     */
     public List<CaseInvestigationDTO> getCaseInvestigations(UUID token) {
         User user = instance.getUserByToken(token);
-        List<CaseInvestigation> all = ciRepository.findAllByUserId(user.getId());
+        
+        if (user == null) return new ArrayList<>();
+
+        // Acceso a BD mediante HTTP
+        List<CaseInvestigation> all = databaseGateway.findAllByUserId(user.getId());
+        
         List<CaseInvestigationDTO> allDTO = new ArrayList<>();
         for(CaseInvestigation ci : all){
             allDTO.add(new CaseInvestigationDTO(ci));
@@ -74,12 +78,20 @@ public class CaseInvestigationService {
         return allDTO;
     }
 
+    /**
+     * Recupera los últimos N casos.
+     */
     public List<CaseInvestigationDTO> getCaseInvestigationsN(UUID token, int N) {
         List<CaseInvestigationDTO> all = getCaseInvestigations(token);
-
-        return all;
+        
+        return all.stream()
+                  .limit(N)
+                  .toList();
     }
 
+    /**
+     * Filtra investigaciones por fecha tras obtenerlas vía HTTP.
+     */
     public List<CaseInvestigationDTO> getCaseInvestigationsInDate(UUID token, Date start, Date end) {
         return getCaseInvestigations(token)
                 .stream()
@@ -87,69 +99,71 @@ public class CaseInvestigationService {
                 .toList();
     }
 
+    /**
+     * Elimina una investigación solicitándolo mediante HTTP DELETE.
+     */
     public void deleteCaseInvestigation(UUID token, Long id) {
-        Optional<CaseInvestigation> ciOpt = ciRepository.findById(id);
+        // Obtenemos el caso primero para verificar propiedad
+        CaseInvestigation ci = databaseGateway.findById(id);
 
-        if (ciOpt.isPresent()) {
-            CaseInvestigation ci = ciOpt.get();
-            if (ci.getUserId().equals(instance.getUserByToken(token).getId())) {
-                ciRepository.delete(ci);
+        if (ci != null) {
+            User user = instance.getUserByToken(token);
+            if (user != null && ci.getUserId().equals(user.getId())) {
+                databaseGateway.deleteCase(id);
             }
         }
     }
 
+    /**
+     * Procesa resultados usando Gateways externos (HTTP).
+     */
     public Map<AnalysisType, Float> showCaseInvestigationResults(UUID token, Long id) {
+        CaseInvestigation ci = databaseGateway.findById(id);
 
-        Optional<CaseInvestigation> optCi = ciRepository.findById(id);
+        if (ci == null) return Map.of();
 
-        if (optCi.isEmpty()) return Map.of();
-
-        CaseInvestigation ci = optCi.get();
-
-        if (!ci.getUserId().equals(instance.getUserByToken(token).getId())) {
+        User user = instance.getUserByToken(token);
+        if (user == null || !ci.getUserId().equals(user.getId())) {
             return Map.of();
         }
 
+        // Procesamiento remoto
         CaseInvestigation processed = analysisGateway.sendToRemoteProcessing(ci);
 
+        // Guardado de resultados mediante HTTP
         databaseGateway.saveResults(processed);
 
         return processed.getResults();
     }
 
-    @Transactional
+    /**
+     * Añade archivos a un caso existente mediante HTTP PUT/POST.
+     */
     public APIResponse addFilesToCase(UUID token, List<String> filesURL, Long id) {
-        // 1. Validar el usuario por token
         User user = instance.getUserByToken(token);
         if (user == null) {
             return APIResponse.NO_EXISTE;
         }
 
-        // 2. Buscar el caso por ID
-        Optional<CaseInvestigation> optCi = ciRepository.findById(id);
-        if (optCi.isEmpty()) {
+        CaseInvestigation ci = databaseGateway.findById(id);
+        if (ci == null) {
             return APIResponse.NO_EXISTE;
         }
 
-        CaseInvestigation ci = optCi.get();
-
-        // 3. Verificar propiedad (Seguridad)
         if (!ci.getUserId().equals(user.getId())) {
             return APIResponse.MAL;
         }
 
-        // 4. Validar datos de entrada
         if (filesURL == null || filesURL.isEmpty()) {
             return APIResponse.FALTAN_DATOS;
         }
 
-        // 5. Añadir archivos a la lista existente de la entidad
+        // Actualizamos la lista localmente
         ci.getImageList().addAll(filesURL);
 
-        // 6. Guardar cambios
-        ciRepository.save(ci);
+        // Enviamos la actualización a la BD mediante HTTP
+        boolean success = databaseGateway.updateCase(ci);
 
-        return APIResponse.BIEN;
+        return success ? APIResponse.BIEN : APIResponse.MAL;
     }
-
 }

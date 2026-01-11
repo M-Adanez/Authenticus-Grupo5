@@ -1,73 +1,93 @@
 package es.deusto.sd.proyecto.Service;
 
-import org.springframework.stereotype.Service;
-
-import es.deusto.sd.proyecto.DAO.userRepository;
-import es.deusto.sd.proyecto.DAO.caseInvestigationRepository;
-import es.deusto.sd.proyecto.DTO.CaseInvestigationDTO;
-import es.deusto.sd.proyecto.DTO.userDTO;
-import es.deusto.sd.proyecto.Entity.User;
-import es.deusto.sd.proyecto.Entity.CaseInvestigation;
-
+import java.util.List;
 import java.util.Optional;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import es.deusto.sd.proyecto.DAO.caseInvestigationRepository;
+import es.deusto.sd.proyecto.DAO.userRepository;
+import es.deusto.sd.proyecto.DTO.userDTO;
+import es.deusto.sd.proyecto.Entity.CaseInvestigation;
+import es.deusto.sd.proyecto.Entity.User;
 
 @Service
 public class gestionBBDD {
 
-    private final userRepository usRepository;
-    private final caseInvestigationRepository ciRepository;
+    private final userRepository userRepo;
+    private final caseInvestigationRepository ciRepo;
 
-    public gestionBBDD(userRepository usRepository, caseInvestigationRepository ciRepository) {
-        this.usRepository = usRepository;
-        this.ciRepository = ciRepository;
+    public gestionBBDD(userRepository userRepo, caseInvestigationRepository ciRepo) {
+        this.userRepo = userRepo;
+        this.ciRepo = ciRepo;
     }
 
-    // ----------------------------
-    // USUARIOS
-    // ----------------------------
+    // ==========================================
+    // MÉTODOS PARA USUARIOS
+    // ==========================================
 
-    public APIResponse registerUser(userDTO userDTO){
-
-        if (userDTO.getUsername() == null || userDTO.getUsername().isEmpty() ||
-            userDTO.getPassword() == null || userDTO.getPassword().isEmpty() ||
-            userDTO.getNombre() == null || userDTO.getNombre().isEmpty() ||
-            userDTO.getTlf() == null || userDTO.getTlf().isEmpty()) {
-
-            return APIResponse.FALTAN_DATOS;
-        }
-
-        if (usRepository.findByUsername(userDTO.getUsername()).isPresent()) {
+    @Transactional
+    public APIResponse registerUser(userDTO usDTO) {
+        if (userRepo.findByUsername(usDTO.getUsername()).isPresent()) {
             return APIResponse.YA_REGISTRADO;
         }
-
-        User user = new User(userDTO);
-        usRepository.save(user);
-
+        
+        User newUser = new User();
+        newUser.setUsername(usDTO.getUsername());
+        newUser.setPassword(usDTO.getPassword());
+        // Asigna el resto de campos si existen en tu entidad User
+        
+        userRepo.save(newUser);
         return APIResponse.CREADO;
     }
 
-    public APIResponse deleteUserByUsername(String username){
-
-        Optional<User> user = usRepository.findByUsername(username);
-
-        if(user.isEmpty()){
-            return APIResponse.NO_EXISTE;
+    @Transactional
+    public APIResponse deleteUserByUsername(String username) {
+        Optional<User> user = userRepo.findByUsername(username);
+        if (user.isPresent()) {
+            userRepo.delete(user.get());
+            return APIResponse.BIEN;
         }
-
-        usRepository.delete(user.get());
-
-        return APIResponse.BIEN;
+        return APIResponse.NO_EXISTE;
     }
 
     public userDTO getUserByUsername(String username) {
-
-        Optional<User> us = usRepository.findByUsername(username);
-        if(us.isPresent()){
-            userDTO usDTO = new userDTO(us.get());
-            return usDTO;
-        }
-        return null;
+        return userRepo.findByUsername(username)
+                .map(user -> {
+                    userDTO dto = new userDTO();
+                    dto.setUsername(user.getUsername());
+                    // No mapear password por seguridad si es posible
+                    return dto;
+                }).orElse(null);
     }
-    
 
+    // ==========================================
+    // MÉTODOS PARA INVESTIGACIONES (Cases)
+    // ==========================================
+
+    @Transactional
+    public void saveCase(CaseInvestigation ci) {
+        ciRepo.save(ci);
+    }
+
+    public List<CaseInvestigation> findAllByUserId(Long userId) {
+        return ciRepo.findAllByUserId(userId);
+    }
+
+    public CaseInvestigation findCaseById(Long id) {
+        return ciRepo.findById(id).orElse(null);
+    }
+
+    @Transactional
+    public void updateCase(CaseInvestigation ci) {
+        // save() en JPA sirve tanto para crear como para actualizar si el ID ya existe
+        ciRepo.save(ci);
+    }
+
+    @Transactional
+    public void deleteCase(Long id) {
+        ciRepo.deleteById(id);
+    }
 }

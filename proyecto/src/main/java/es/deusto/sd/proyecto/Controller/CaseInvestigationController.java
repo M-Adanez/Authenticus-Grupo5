@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.Map;
+import java.util.ArrayList;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,21 +62,21 @@ public class CaseInvestigationController {
     // Get last 5 cases
     @Operation(summary = "Get the last 5 Case Investigations")
     @GetMapping("/{token}/last")
-    public ResponseEntity<List<CaseInvestigation>> getLast5(@PathVariable("token") String token){
-        return ResponseEntity.ok(ciService.getCaseInvestigations(UUID.fromString(token)));
+    public ResponseEntity<List<CaseInvestigationDTO>> getLast5(@PathVariable("token") String token){
+        return ResponseEntity.ok(ciService.getCaseInvestigationsN(UUID.fromString(token),5));
     }
 
     // Get last N cases
     @Operation(summary = "Get the last N Case Investigations")
     @GetMapping("/{token}/last/{n}")
-    public ResponseEntity<List<CaseInvestigation>> getLastN(@PathVariable("token") String token, @PathVariable("n") int n){
+    public ResponseEntity<List<CaseInvestigationDTO>> getLastN(@PathVariable("token") String token, @PathVariable("n") int n){
         return ResponseEntity.ok(ciService.getCaseInvestigationsN(UUID.fromString(token), n));
     }
 
     // Get cases by date range
     @Operation(summary = "Get Case Investigations by date range")
     @GetMapping("/{token}/dates")
-    public ResponseEntity<List<CaseInvestigation>> getByDate(
+    public ResponseEntity<List<CaseInvestigationDTO>> getByDate(
         @PathVariable("token") String token,
         @RequestParam Date startDate,
         @RequestParam Date endDate){

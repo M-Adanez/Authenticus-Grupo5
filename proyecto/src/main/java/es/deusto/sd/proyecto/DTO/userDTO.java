@@ -1,8 +1,12 @@
 package es.deusto.sd.proyecto.DTO;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-
+import es.deusto.sd.proyecto.Entity.User;
 public class userDTO {
+        
+    @Schema(description = "Id del usuario", example = "1")
+    private Long id;
+
     @Schema(description = "Email del usuario", example = "user1@example.com")
     private String username;
 
@@ -28,6 +32,26 @@ public class userDTO {
         this.password = password;
         this.nombre = nombre;
         this.tlf = tlf;
+    }
+
+    public userDTO(Long id, String username, String password, String nombre, String tlf) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.nombre = nombre;
+        this.tlf = tlf;
+    }
+
+    public userDTO(User us){
+        this.id = us.getId();
+        this.username = us.getUsername();
+        this.password = us.getPassword();
+        this.nombre = us.getPassword();
+        this.tlf = us.getTlf();
+    }
+
+    public Long getId(){
+        return this.id;
     }
 
     public String getUsername() {

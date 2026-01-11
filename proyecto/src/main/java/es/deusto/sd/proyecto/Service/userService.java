@@ -43,13 +43,17 @@ public class userService {
             return APIResponse.FALTAN_DATOS;
         }
 
-        if (instance.getLoggedUssers().containsValue(new User(userDTO))){
-            return APIResponse.YA_LOGEADO;
+        userDTO remoteUserDTO = null;
+
+        try{
+            remoteUserDTO = client.getUserByUsername(userDTO.getUsername());
+        }catch(Exception e){
+            return APIResponse.NO_EXISTE;
         }
 
-        userDTO remoteUserDTO;
-        remoteUserDTO = client.getUserByUsername(userDTO.getUsername());
-        
+        if (instance.getLoggedUssers().containsValue(new User(remoteUserDTO))){
+            return APIResponse.YA_LOGEADO;
+        }
 
         if (remoteUserDTO == null) {
             return APIResponse.NO_EXISTE;

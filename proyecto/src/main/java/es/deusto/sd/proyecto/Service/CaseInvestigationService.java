@@ -15,6 +15,8 @@ import es.deusto.sd.proyecto.Entity.CaseInvestigation;
 import es.deusto.sd.proyecto.Entity.User;
 import es.deusto.sd.proyecto.Gateway.AnalysisGateway;
 import es.deusto.sd.proyecto.Gateway.DatabaseGateway;
+import es.deusto.sd.proyecto.DTO.CaseInvestigationDTO;
+import es.deusto.sd.proyecto.DTO.userDTO;
 
 @Service
 public class CaseInvestigationService {
@@ -35,7 +37,7 @@ public class CaseInvestigationService {
         this.databaseGateway = databaseGateway;
     }
 
-    public APIResponse createCaseInvestigation(UUID token, es.deusto.sd.proyecto.DTO.CaseInvestigationDTO dto) {
+    public APIResponse createCaseInvestigation(UUID token, CaseInvestigationDTO dto) {
 
         User user = instance.getUserByToken(token);
 
@@ -61,21 +63,23 @@ public class CaseInvestigationService {
         return APIResponse.CREADO;
     }
 
-    public List<CaseInvestigation> getCaseInvestigations(UUID token) {
+    public List<CaseInvestigationDTO> getCaseInvestigations(UUID token) {
         User user = instance.getUserByToken(token);
-        return new ArrayList<>(ciRepository.findAllByUserId(user.getId()));
+        List<CaseInvestigation> all = ciRepository.findAllByUserId(user.getId());
+        List<CaseInvestigationDTO> allDTO = new ArrayList<>();
+        for(CaseInvestigation ci : all){
+            allDTO.add(new CaseInvestigationDTO(ci));
+        }
+        return allDTO;
     }
 
-    public List<CaseInvestigation> getCaseInvestigationsN(UUID token, int N) {
-        List<CaseInvestigation> all = getCaseInvestigations(token);
+    public List<CaseInvestigationDTO> getCaseInvestigationsN(UUID token, int N) {
+        List<CaseInvestigationDTO> all = getCaseInvestigations(token);
 
-        return all.stream()
-                .sorted((a,b) -> b.getDate().compareTo(a.getDate()))
-                .limit(N)
-                .toList();
+        return all;
     }
 
-    public List<CaseInvestigation> getCaseInvestigationsInDate(UUID token, Date start, Date end) {
+    public List<CaseInvestigationDTO> getCaseInvestigationsInDate(UUID token, Date start, Date end) {
         return getCaseInvestigations(token)
                 .stream()
                 .filter(ci -> ci.getDate().after(start) && ci.getDate().before(end))

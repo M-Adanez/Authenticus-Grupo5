@@ -4,12 +4,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ArrayList;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -31,12 +33,12 @@ public class CaseInvestigation {
 
     private Date date;
 
-    @ElementCollection
-    private List<String> imageList;
+    @ElementCollection(fetch = FetchType.EAGER)
+    private List<String> imageList = new ArrayList<>();
 
     private Long userId;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "case_results")
     @MapKeyEnumerated(EnumType.STRING)
     private Map<AnalysisType, Float> results = new HashMap<>();

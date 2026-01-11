@@ -11,7 +11,8 @@ import es.deusto.sd.proyecto.Entity.CaseInvestigation;
 
 public class CaseInvestigationDTO {
 
-    private long userId;
+    private Long userId;
+    private Long caseId;
     private String name;
     private AnalysisType type;
     private Date date;
@@ -27,7 +28,7 @@ public class CaseInvestigationDTO {
         this.imageList = imageList;
     }
 
-        public CaseInvestigationDTO(String name, AnalysisType type, Date date, List<String> imageList, Map<AnalysisType, Float> results) {
+    public CaseInvestigationDTO(String name, AnalysisType type, Date date, List<String> imageList, Map<AnalysisType, Float> results) {
         this.name = name;
         this.type = type;
         this.date = date;
@@ -36,6 +37,7 @@ public class CaseInvestigationDTO {
     }
 
     public CaseInvestigationDTO(CaseInvestigation ci) {
+        this.caseId = ci.getId();
         this.name = ci.getName();
         this.type = ci.getType();
         this.date = ci.getDate();
@@ -52,4 +54,5 @@ public class CaseInvestigationDTO {
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
     public Map<AnalysisType, Float> getResults(){ return this.results;}
+    public Long getCaseID(){return this.caseId;}
 }

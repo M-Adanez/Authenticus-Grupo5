@@ -6,4 +6,8 @@ import es.deusto.sd.proyecto.Entity.User;
 
 public interface userRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
+    
+    // Añade estos dos métodos:
+    boolean existsByUsername(String username);
+    void deleteByUsername(String username);
 }

@@ -103,14 +103,14 @@ public class CaseInvestigationController {
         return ResponseEntity.ok("Deleted successfully");
     }
 
-    // // Add files to case
-    // @Operation(summary = "Add files to a case")
-    // @PutMapping("/{token}/{id}/files")
-    // public ResponseEntity<String> addFiles(
-    //     @PathVariable("token") String token,
-    //     @PathVariable("id") Long id,
-    //     @RequestBody List<String> filesURL){
-    //     ciService.addFilesToCase(UUID.fromString(token), filesURL, id);
-    //     return ResponseEntity.ok("Files added successfully");
-    // }
+    // Add files to case
+     @Operation(summary = "Add files to a case")
+     @PutMapping("/{token}/{id}/files")
+     public ResponseEntity<String> addFiles(
+         @PathVariable("token") String token,
+         @PathVariable("id") Long id,
+         @RequestBody List<String> filesURL){
+         ciService.addFilesToCase(UUID.fromString(token), filesURL, id);
+         return ResponseEntity.ok("Files added successfully");
+     }
 }

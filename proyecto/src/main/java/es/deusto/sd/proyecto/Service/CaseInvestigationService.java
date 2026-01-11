@@ -17,6 +17,7 @@ import es.deusto.sd.proyecto.Gateway.AnalysisGateway;
 import es.deusto.sd.proyecto.Gateway.DatabaseGateway;
 import es.deusto.sd.proyecto.DTO.CaseInvestigationDTO;
 import es.deusto.sd.proyecto.DTO.userDTO;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CaseInvestigationService {
@@ -115,4 +116,40 @@ public class CaseInvestigationService {
 
         return processed.getResults();
     }
+
+    @Transactional
+    public APIResponse addFilesToCase(UUID token, List<String> filesURL, Long id) {
+        // 1. Validar el usuario por token
+        User user = instance.getUserByToken(token);
+        if (user == null) {
+            return APIResponse.NO_EXISTE;
+        }
+
+        // 2. Buscar el caso por ID
+        Optional<CaseInvestigation> optCi = ciRepository.findById(id);
+        if (optCi.isEmpty()) {
+            return APIResponse.NO_EXISTE;
+        }
+
+        CaseInvestigation ci = optCi.get();
+
+        // 3. Verificar propiedad (Seguridad)
+        if (!ci.getUserId().equals(user.getId())) {
+            return APIResponse.MAL;
+        }
+
+        // 4. Validar datos de entrada
+        if (filesURL == null || filesURL.isEmpty()) {
+            return APIResponse.FALTAN_DATOS;
+        }
+
+        // 5. Añadir archivos a la lista existente de la entidad
+        ci.getImageList().addAll(filesURL);
+
+        // 6. Guardar cambios
+        ciRepository.save(ci);
+
+        return APIResponse.BIEN;
+    }
+
 }

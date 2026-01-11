@@ -140,4 +140,23 @@ public class userController {
         }
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);//400
     }
+
+    // ELIMINAR USUARIO DE LA BASE DE DATOS
+    @Operation(
+        summary = "Eliminar usuario de la BD",
+        description = "Elimina permanentemente toda la información del usuario de la base de datos"
+    )
+    @ApiResponse(responseCode = "200", description = "Usuario eliminado con éxito")
+    @ApiResponse(responseCode = "404", description = "El usuario no existe")
+
+    @DeleteMapping("/delete-db/{username}")
+    public ResponseEntity<String> deleteFromDB(@PathVariable("username") String username) {
+        boolean ok = userService.permaDeleteByUsername(username);
+        if (ok) {
+            return ResponseEntity.ok("Usuario " + username + " eliminado de la BD");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
+        }
+    }
+
 }

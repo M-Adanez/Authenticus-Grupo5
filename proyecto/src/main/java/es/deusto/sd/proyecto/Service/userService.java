@@ -6,17 +6,21 @@ import es.deusto.sd.proyecto.DTO.userDTO;
 import es.deusto.sd.proyecto.Entity.User;
 import es.deusto.sd.proyecto.Client.UserApiClient;
 import java.util.UUID;
+import es.deusto.sd.proyecto.DAO.userRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class userService {
 
+    private final userRepository userRepository;
     private final stateManagement instance;
     private final UserApiClient client;
 
-    public userService(UserApiClient client) {
-        this.instance = stateManagement.getInstance();
-        this.client = client;
-    }
+    public userService(UserApiClient client, userRepository userRepository) {
+    this.instance = stateManagement.getInstance();
+    this.client = client;
+    this.userRepository = userRepository; // <--- Asigna el parámetro a la variable de clase
+}
 
     private UUID generateToken(){
         return UUID.randomUUID();
@@ -112,4 +116,18 @@ public class userService {
 
         return APIResponse.MAL;
     }
+
+    // ----------------------------
+    // ELIMINAR USUARIO DE LA BASE DE DATOS
+    // ----------------------------
+    @Transactional
+    public boolean permaDeleteByUsername(String username) {
+        // Primero comprobamos si el usuario existe por su nombre de usuario
+        if (userRepository.existsByUsername(username)) { 
+            userRepository.deleteByUsername(username);
+            return true;
+        }
+        return false;
+    }
+
 }

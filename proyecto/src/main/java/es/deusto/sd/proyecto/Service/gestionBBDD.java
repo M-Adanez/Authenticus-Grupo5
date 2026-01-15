@@ -54,13 +54,12 @@ public class gestionBBDD {
     }
 
     public userDTO getUserByUsername(String username) {
-        return userRepo.findByUsername(username)
-                .map(user -> {
-                    userDTO dto = new userDTO();
-                    dto.setUsername(user.getUsername());
-                    // No mapear password por seguridad si es posible
-                    return dto;
-                }).orElse(null);
+        Optional<User> us=userRepo.findByUsername(username);
+        if(us.isPresent()){
+            userDTO usDTO=new userDTO(us.get());
+            return usDTO;
+        }
+        return null;
     }
 
     // ==========================================

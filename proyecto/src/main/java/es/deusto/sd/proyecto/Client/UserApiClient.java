@@ -68,6 +68,8 @@ public class UserApiClient {
             HttpResponse<String> response =
                     client.send(request, HttpResponse.BodyHandlers.ofString());
 
+            System.out.println(response.body());
+
             if (response.statusCode() == 404) {
                 return null;
             }

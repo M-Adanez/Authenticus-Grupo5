@@ -20,6 +20,8 @@ public class dataProcessingService {
     public Map<AnalysisType, List<Float>> showCaseInvestigationResults(CaseInvestigation ci) {
         Map<AnalysisType, List<Float>> results = new HashMap<>();
 
+        if (ci.getImageList() == null) return results;
+
         switch (ci.getType()) {
             case BOTH -> processBoth(ci, results);
             case CONTENT_ALTERATION -> processContentAlteration(ci, results);

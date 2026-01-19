@@ -7,6 +7,9 @@ import es.deusto.sd.proyecto.Service.UserServiceALUD;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+
+import org.springframework.stereotype.Component;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
@@ -16,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@Component
 public class SwingApp {
     private final UserServiceALUD userManager = new UserServiceALUD();
     private final CaseService caseManager = new CaseService();
@@ -28,7 +32,7 @@ public class SwingApp {
         EventQueue.invokeLater(() -> new SwingApp().createAndShowGui());
     }
 
-    private void createAndShowGui() {
+    public void createAndShowGui() {
         frame = new JFrame("Sample Swing Interface - User & Case Management");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(900, 600);

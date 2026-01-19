@@ -2,8 +2,10 @@ package es.deusto.sd.proyecto.Service;
 
 import java.util.*;
 
-import es.deusto.sd.proyecto.Entity.UserItem;
+import org.springframework.stereotype.Service;
 
+import es.deusto.sd.proyecto.Entity.UserItem;
+@Service
 public class UserServiceALUD {
     private final Map<String, UserItem> users = new HashMap<>();
     private UserItem currentUser = null;

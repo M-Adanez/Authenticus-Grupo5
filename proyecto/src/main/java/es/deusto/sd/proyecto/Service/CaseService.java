@@ -3,8 +3,11 @@ package es.deusto.sd.proyecto.Service;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import org.springframework.stereotype.Service;
+
 import es.deusto.sd.proyecto.Entity.CaseItem;
 
+@Service
 public class CaseService {
     private final List<CaseItem> cases = new ArrayList<>();
 

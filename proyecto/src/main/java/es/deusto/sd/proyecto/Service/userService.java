@@ -4,8 +4,14 @@ import org.springframework.stereotype.Service;
 
 import es.deusto.sd.proyecto.DTO.userDTO;
 import es.deusto.sd.proyecto.Entity.User;
+import es.deusto.sd.proyecto.Entity.UserItem;
 import es.deusto.sd.proyecto.Client.UserApiClient;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.UUID;
+import java.util.Map;
+import java.util.List;
 import es.deusto.sd.proyecto.DAO.userRepository;
 import org.springframework.transaction.annotation.Transactional;
 
